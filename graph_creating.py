@@ -20,16 +20,19 @@ with open('actors_id.csv', newline='') as csvfile:
     for row in spamreader:
         id_list.append(row[0])
 
-graph = ActorsGraph(id_list)
+id_set = set(id_list)
+films_id_set = set()
 
+graph = ActorsGraph(id_list[:10])
 
 for actor in id_list[:10]:
     for film in get_filmography(ia.get_person(actor)['filmography']):
-        for cast_actor in ia.get_movie(film.movieID)['cast']:
-            if cast_actor.personID in id_list[:10]:
-                graph.add_edge(actor, cast_actor.personID, film.movieID)
+        if film.movieID not in films_id_set:
+            films_id_set.add(film.movieID)
+            for cast_actor in ia.get_movie(film.movieID)['cast']:
+                if cast_actor.personID in id_set:
+                    graph.add_edge(actor, cast_actor.personID, film.movieID)
 
-            
 
 #print(len(movie_id_list))
     
