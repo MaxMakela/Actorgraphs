@@ -1,12 +1,14 @@
 from log import log
 import csv
 from os import path
+from graph_generator import GraphGenerator
 
 
 class ActorsGraph(object):
 
     @staticmethod
     def load(file_path="./graph.csv"):
+        """Load graph from csv file"""
         assert path.isfile(file_path), "'{}' is not a file".format(file_path)
         log.debug("loading graph from {}".format(file_path))
         graph = None
@@ -23,6 +25,11 @@ class ActorsGraph(object):
 
         assert graph, "graph has not been created, check '{}' file".format(file_path)
         return graph
+
+    @staticmethod
+    def generate(actor_ids, ia=None):
+        """Generate graph for actors using IMDB API"""
+        return GraphGenerator(actor_ids, ia).generate()
 
     def __init__(self, actor_ids=None):
         if actor_ids is None:
@@ -49,9 +56,10 @@ class ActorsGraph(object):
             self.graph[i2][i1] = self.graph[i1][i2]
 
     def add_edge(self, actor_id, other_actor_id, movie_id):
-        i1 = self.get_index(actor_id)
-        i2 = self.get_index(other_actor_id)
-        self.add_edge_by_indices(i1, i2, movie_id)
+        if actor_id != other_actor_id:
+            i1 = self.get_index(actor_id)
+            i2 = self.get_index(other_actor_id)
+            self.add_edge_by_indices(i1, i2, movie_id)
 
     def get_edge(self, actor_id, other_actor_id):
         i1 = self.get_index(actor_id)
