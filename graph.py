@@ -1,7 +1,6 @@
 from log import log
 import csv
 from os import path
-from graph_generator import GraphGenerator
 
 
 class ActorsGraph(object):
@@ -25,11 +24,6 @@ class ActorsGraph(object):
 
         assert graph, "graph has not been created, check '{}' file".format(file_path)
         return graph
-
-    @staticmethod
-    def generate(actor_ids, ia=None):
-        """Generate graph for actors using IMDB API"""
-        return GraphGenerator(actor_ids, ia).generate()
 
     def __init__(self, actor_ids=None):
         if actor_ids is None:
