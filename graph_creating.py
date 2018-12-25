@@ -1,4 +1,4 @@
-from graph import ActorsGraph
+from graph_generator import GraphGenerator
 import csv
 import imdb
 
@@ -11,5 +11,5 @@ if __name__ == "__main__":
         for row in csv.reader(csvfile, delimiter=','):
             id_list.append(row[0])
 
-    graph = ActorsGraph.generate(id_list[:10], ia)
+    graph = GraphGenerator(id_list[:10], ia).generate()
     graph.save()
