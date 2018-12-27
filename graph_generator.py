@@ -36,16 +36,13 @@ class GraphGenerator(object):
                     films_ids_set.add(film.movieID)
 
                     for actor_duo in list(itertools.combinations([actor.personID for actor in self.ia.get_movie(film.movieID)['cast']], 2)):
-                        graph.add_edge(actor_duo[0], actor_duo[1], film.movieID)
-
-                    for cast_actor in self.ia.get_movie(film.movieID)['cast']:
-                        if cast_actor.personID in self.actor_ids_set:
+                         if actor_duo[0] in self.actor_ids_set and actor_duo[1] in self.actor_ids_set:
                             log.info("adding edge {}, {}: {} '{}'".format(
-                                actor_id,
-                                cast_actor.personID,
+                                actor_duo[0],
+                                actor_duo[1],
                                 film.movieID,
                                 film.data["title"]
                             ))
-                            graph.add_edge(actor_id, cast_actor.personID, film.movieID)
+                            graph.add_edge(actor_duo[0], actor_duo[1], film.movieID)
 
         return graph
