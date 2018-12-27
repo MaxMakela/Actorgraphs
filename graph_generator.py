@@ -19,9 +19,9 @@ class GraphGenerator(object):
                 break
         return filmography
 
-    def combination(cast):
-        cast_id = [actor.personID for actor in cast]
-        return list(itertools.combinations(cast_id, 2))
+    # def combination(cast):
+    #     cast_id = [actor.personID for actor in cast]
+    #     return list(itertools.combinations(cast_id, 2))
 
     def generate(self):
         """Generate graph for actors using IMDB API"""
@@ -34,8 +34,8 @@ class GraphGenerator(object):
             for film in self.get_filmography(person["data"]['filmography']):
                 if film.movieID not in films_ids_set:
                     films_ids_set.add(film.movieID)
-                    
-                    for actor_duo in combination(self.ia.get_movie(film.movieID)['cast']):
+
+                    for actor_duo in list(itertools.combinations([actor.personID for actor in self.ia.get_movie(film.movieID)['cast']], 2)):
                         graph.add_edge(actor_duo[0], actor_duo[1], film.movieID)
 
                     for cast_actor in self.ia.get_movie(film.movieID)['cast']:
