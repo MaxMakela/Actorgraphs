@@ -46,29 +46,29 @@ class GraphGenerator(object):
         for task in futures.as_completed(tasks):
             yield task.result()
 
-    def filter_actors(self, cast):
-        return [actor for actor in cast if actor.personID in self.actor_ids_set]
-
-    def filter_movies(self, imdb_person, films_ids_set):
-        movies = self.get_filmography(imdb_person["data"]['filmography'])
-        return [movie.movieID for movie in movies if movie.movieID not in films_ids_set]
-
     def generate(self):
         """Generate graph for actors using IMDB API"""
         graph = ActorsGraph(self.actor_ids)
-        films_ids_set = set()
+        all_films = dict()
 
         with futures.ThreadPoolExecutor(max_workers=self.max_threads) as executor:
             for actor_id, imdb_person in self.imdb_get_persons(executor, graph.actor_ids):
-                person_movie_ids = self.filter_movies(imdb_person, films_ids_set)
                 log.info("imdb person found: {}: {}".format(actor_id, imdb_person["data"]["name"]))
-                log.info("movies to look at: {}".format(len(person_movie_ids)))
+                movies = self.get_filmography(imdb_person["data"]['filmography'])
+                for movie in movies:
+                    if movie.movieID in all_films:
+                        all_films[movie.movieID] += 1
+                    else:
+                        all_films[movie.movieID] = 1
 
-                for movie_id, imdb_movie in self.imdb_get_movies(executor, person_movie_ids):
-                    films_ids_set.add(movie_id)
-                    important_actors = self.filter_actors(imdb_movie['cast'])
-                    for id1, id2 in self.combinations(important_actors):
-                        log.info("adding edge {}, {}: {} '{}'".format(id1, id2, movie_id, imdb_movie["title"]))
-                        graph.add_edge(id1, id2, movie_id)
+        important_film_ids = [movie_id for movie_id, counter in all_films.items() if counter > 1]
+
+        with futures.ThreadPoolExecutor(max_workers=self.max_threads) as executor:
+            log.info("movies to look at: {}".format(len(important_film_ids)))
+            for movie_id, imdb_movie in self.imdb_get_movies(executor, important_film_ids):
+                important_actors = [a for a in imdb_movie['cast'] if a.personID in self.actor_ids_set]
+                for id1, id2 in self.combinations(important_actors):
+                    log.info("adding edge {}, {}: {} '{}'".format(id1, id2, movie_id, imdb_movie["title"]))
+                    graph.add_edge(id1, id2, movie_id)
 
         return graph
