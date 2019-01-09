@@ -44,7 +44,7 @@ class GraphGenerator(object):
             for actor in self.ia.get_movie(film)['cast']:
                 if actor.personID in actor_id:
                     actors_in_cast.append(actor.personID)
-            for actor_duo in list(itertools.combinations([actor for actor in actors_in_cast], 2)):
+            for actor_duo in list(itertools.combinations(actors_in_cast, 2)):
                 graph.add_edge(actor_duo[0], actor_duo[1], film)        
 
 
