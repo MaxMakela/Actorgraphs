@@ -78,3 +78,13 @@ class ActorsGraph(object):
             for row in self.graph:
                 movies = [concat_movie_ids(movie_ids) for movie_ids in row]
                 writer.writerow(movies)
+
+    def search_path(self, actor_id, another_actor_id):
+        assert actor_id in self.indices, "{} actor is not in the graph".format(actor_id)
+        assert another_actor_id in self.indices, "{} actor is not in the graph".format(another_actor_id)
+
+        graph_path = []
+        # TODO: breadth first search goes here.
+        # TODO: graph_path = [(aid1, {mid1, md2}), (aid2, {md3}), (aid3, {mid4})]
+
+        return graph_path

@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 from graph_generator import GraphGenerator
+from log import log
 
 
 class TestGraphDecorator(unittest.TestCase):
@@ -39,12 +40,17 @@ class TestGraphDecorator(unittest.TestCase):
         })
 
     def generate_movie(self, movie_id, actors):
-        return movie_id, {"cast": [MagicMock(personID=a) for a in actors]}
+        return movie_id, {
+            "cast": [MagicMock(personID=a) for a in actors],
+            "title": movie_id
+        }
 
     def get_person_main(self, actor_id):
+        log.debug("mocking actor: {}".format(actor_id))
         return self.persons[actor_id]
 
     def get_movie(self, movie_id):
+        log.debug("mocking movie: {}".format(movie_id))
         return self.movies[movie_id]
 
     def test_family_graph1(self):
@@ -53,8 +59,7 @@ class TestGraphDecorator(unittest.TestCase):
             'get_movie.side_effect': self.get_movie
         }
         ia = MagicMock(**attrs)
-
-        graph = GraphGenerator(self.actor_ids, ia).generate()
+        graph = GraphGenerator(self.actor_ids, ia, max_threads=4).generate()
 
         self.assertEqual(None, graph.get_edge("Maxim", "Lilia"))
         self.assertEqual({"Sumy"}, graph.get_edge("Maxim", "Kostya"))
@@ -79,6 +84,23 @@ class TestGraphDecorator(unittest.TestCase):
 
         self.assertEqual({"New York"}, graph.get_edge("Irina", "Elena"))
         self.assertEqual({"New York"}, graph.get_edge("Irina", "Svetlana"))
+
+    def test_family_search1(self):
+        attrs = {
+            'get_person_main.side_effect': self.get_person_main,
+            'get_movie.side_effect': self.get_movie
+        }
+        ia = MagicMock(**attrs)
+        graph = GraphGenerator(self.actor_ids, ia, max_threads=4).generate()
+
+        self.assertSequenceEqual(
+            graph.search_path("Maxim", "Kostya"),
+            [("Kostya", {"Sumy"})]
+        )
+        self.assertSequenceEqual(
+            graph.search_path("Maxim", "Elena"),
+            [("Kostya", {"Sumy"}), ("Elena", {"Moscow"})]
+        )
 
 
 if __name__ == '__main__':
