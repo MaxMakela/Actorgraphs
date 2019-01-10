@@ -2,4 +2,6 @@ import logging
 import logging.config
 
 logging.config.fileConfig('logging.conf')
-log = logging.getLogger('root')
+logging.getLogger('imdbpy').setLevel(logging.WARNING)
+logging.getLogger('imdb').setLevel(logging.WARNING)
+log = logging.getLogger(__name__)
