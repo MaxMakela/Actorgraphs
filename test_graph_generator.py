@@ -94,12 +94,12 @@ class TestGraphDecorator(unittest.TestCase):
         graph = GraphGenerator(self.actor_ids, ia, max_threads=4).generate()
 
         self.assertSequenceEqual(
-            graph.search_path("Maxim", "Kostya"),
-            [("Kostya", {"Sumy"})]
+            [("Kostya", {"Sumy"})],
+            graph.search_path("Maxim", "Kostya")
         )
         self.assertSequenceEqual(
-            graph.search_path("Maxim", "Elena"),
-            [("Kostya", {"Sumy"}), ("Elena", {"Moscow"})]
+            [("Kostya", {"Sumy"}), ("Elena", {"Moscow"})],
+            graph.search_path("Maxim", "Elena")
         )
 
 

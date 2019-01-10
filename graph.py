@@ -85,6 +85,10 @@ class ActorsGraph(object):
 
         graph_path = []
         # TODO: breadth first search goes here.
-        # TODO: graph_path = [(aid1, {mid1, md2}), (aid2, {md3}), (aid3, {mid4})]
+        # TODO: graph_path = [
+        #  (aid1, {mid1, mid2}),
+        #  (aid2, {mid3}),
+        #  (another_actor_id, {mid4})
+        #  ]
 
         return graph_path
