@@ -59,7 +59,6 @@ class TestGraphDecorator(unittest.TestCase):
             'get_movie.side_effect': self.get_movie
         }
         ia = MagicMock(**attrs)
-
         graph = GraphGenerator(self.actor_ids, ia, max_threads=4).generate()
 
         self.assertEqual(None, graph.get_edge("Maxim", "Lilia"))
@@ -85,6 +84,23 @@ class TestGraphDecorator(unittest.TestCase):
 
         self.assertEqual({"New York"}, graph.get_edge("Irina", "Elena"))
         self.assertEqual({"New York"}, graph.get_edge("Irina", "Svetlana"))
+
+    def test_family_search1(self):
+        attrs = {
+            'get_person_main.side_effect': self.get_person_main,
+            'get_movie.side_effect': self.get_movie
+        }
+        ia = MagicMock(**attrs)
+        graph = GraphGenerator(self.actor_ids, ia, max_threads=4).generate()
+
+        self.assertSequenceEqual(
+            graph.search_path("Maxim", "Kostya"),
+            [("Kostya", {"Sumy"})]
+        )
+        self.assertSequenceEqual(
+            graph.search_path("Maxim", "Elena"),
+            [("Kostya", {"Sumy"}), ("Elena", {"Moscow"})]
+        )
 
 
 if __name__ == '__main__':
