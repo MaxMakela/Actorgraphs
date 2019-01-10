@@ -55,15 +55,12 @@ class GraphGenerator(object):
                     else:
                         films_ids_dict[film.movieID] = 1
 
-        films_ids = [i for i in films_ids_dict if films_ids_dict[i] != 1]
+        films_ids = [film_id for film_id, count in films_ids_dict.items() if count > 1]
 
         with futures.ThreadPoolExecutor(max_workers=self.max_threads) as executor:
             log.info("movies to look at: {}".format(len(films_ids)))
             for film_id, film in self.imdb_get_movies(executor, films_ids):
-                actors_in_cast = []
-                for actor in film['cast']:
-                    if actor.personID in self.actor_ids:
-                        actors_in_cast.append(actor.personID)
+                actors_in_cast = [actor.personID for actor in film['cast'] if actor.personID in self.actor_ids]
 
                 for id1, id2 in list(itertools.combinations(actors_in_cast, 2)):
                     log.info("adding edge {}, {}: {} '{}'".format(id1, id2, film_id, film["title"]))
