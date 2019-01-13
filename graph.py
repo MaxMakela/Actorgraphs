@@ -9,7 +9,7 @@ class ActorsGraph(object):
     def load(file_path="./graph.csv"):
         """Load graph from csv file"""
         assert path.isfile(file_path), "'{}' is not a file".format(file_path)
-        log.debug("loading graph from {}".format(file_path))
+        log.debug("loading graph from: {}".format(file_path))
         graph = None
 
         with open(file_path, 'r', newline='', encoding='utf-8') as file:
@@ -34,13 +34,18 @@ class ActorsGraph(object):
         self.graph = [[None for _ in actor_ids] for _ in actor_ids]
         log.debug("graph {}x{} has been created".format(len(actor_ids), len(actor_ids)))
 
+    def clone(self):
+        copy = ActorsGraph(self.actor_ids)
+        copy.graph = [[self.get_edge(id1, id2) for id1 in self.actor_ids] for id2 in self.actor_ids]
+        return copy
+
     def get_index(self, actor_id):
-        assert actor_id in self.indices, "{} actor is not in the graph".format(actor_id)
+        assert actor_id in self.indices, "{}: actor is not in the graph".format(actor_id)
         return self.indices[actor_id]
 
     def add_edge_by_indices(self, i1, i2, movie_id):
         if movie_id:
-            log.debug("({}, {}) adding {}".format(i1, i2, movie_id))
+            log.debug("({}, {}) adding: {}".format(i1, i2, movie_id))
             if self.graph[i1][i2]:
                 self.graph[i1][i2].add(movie_id)
             else:
@@ -48,6 +53,12 @@ class ActorsGraph(object):
 
             # TODO: matrix is symmetrical now, but could be refactored to half-matrix for memory efficiency
             self.graph[i2][i1] = self.graph[i1][i2]
+
+    def remove_edge(self, actor_id, other_actor_id):
+        i1 = self.get_index(actor_id)
+        i2 = self.get_index(other_actor_id)
+        self.graph[i1][i2] = None
+        self.graph[i2][i1] = None
 
     def add_edge(self, actor_id, other_actor_id, movie_id):
         if actor_id != other_actor_id:
@@ -72,7 +83,7 @@ class ActorsGraph(object):
             return ",".join(movie_ids) if movie_ids else ""
 
         with open(file_path, 'w', newline='', encoding='utf-8') as file:
-            log.debug("saving graph to {}".format(file_path))
+            log.debug("saving graph to: {}".format(file_path))
             writer = csv.writer(file, quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(self.actor_ids)
             for row in self.graph:
@@ -80,8 +91,8 @@ class ActorsGraph(object):
                 writer.writerow(movies)
 
     def search_path(self, actor_id, another_actor_id):
-        assert actor_id in self.indices, "{} actor is not in the graph".format(actor_id)
-        assert another_actor_id in self.indices, "{} actor is not in the graph".format(another_actor_id)
+        assert actor_id in self.indices, "{}: actor is not in the graph".format(actor_id)
+        assert another_actor_id in self.indices, "{}: actor is not in the graph".format(another_actor_id)
 
         graph_path = []
         # TODO: breadth first search goes here.
