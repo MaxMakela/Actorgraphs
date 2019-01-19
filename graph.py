@@ -71,10 +71,15 @@ class ActorsGraph(object):
         i2 = self.get_index(other_actor_id)
         return self.graph[i1][i2] if self.graph[i1][i2] else self.graph[i2][i1]
 
-    def get_connections(self, actor_id):
+    def get_connections(self, actor_id, visited_connections=None):
+        if visited_connections is None:
+            visited_connections = set()
+
         for other_actor_id in self.indices.keys():
             movies_ids = self.get_edge(actor_id, other_actor_id)
-            if movies_ids:
+            if movies_ids \
+                    and (actor_id, other_actor_id) not in visited_connections \
+                    and (other_actor_id, actor_id) not in visited_connections:
                 log.debug("actors {}, {}: connection found {}".format(actor_id, other_actor_id, movies_ids))
                 yield (other_actor_id, movies_ids)
 
@@ -89,17 +94,3 @@ class ActorsGraph(object):
             for row in self.graph:
                 movies = [concat_movie_ids(movie_ids) for movie_ids in row]
                 writer.writerow(movies)
-
-    def search_path(self, actor_id, another_actor_id):
-        assert actor_id in self.indices, "{}: actor is not in the graph".format(actor_id)
-        assert another_actor_id in self.indices, "{}: actor is not in the graph".format(another_actor_id)
-
-        graph_path = []
-        # TODO: breadth first search goes here.
-        # TODO: graph_path = [
-        #  (aid1, {mid1, mid2}),
-        #  (aid2, {mid3}),
-        #  (another_actor_id, {mid4})
-        #  ]
-
-        return graph_path

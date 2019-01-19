@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 from graph_generator import GraphGenerator
+from actors_path import ActorToActorPath
 from log import log
 
 
@@ -91,16 +92,29 @@ class TestGraphDecorator(unittest.TestCase):
             'get_movie.side_effect': self.get_movie
         }
         ia = MagicMock(**attrs)
-        graph = GraphGenerator(self.actor_ids, ia, max_threads=4).generate()
+        graph = GraphGenerator(self.actor_ids, ia, max_threads=1).generate()
 
-        self.assertSequenceEqual(
-            [("Kostya", {"Sumy"})],
-            graph.search_path("Maxim", "Kostya")
-        )
-        self.assertSequenceEqual(
-            [("Kostya", {"Sumy"}), ("Elena", {"Moscow"})],
-            graph.search_path("Maxim", "Elena")
-        )
+        expected = ActorToActorPath("Maxim", "Kostya")
+        expected.add_connection("Maxim", "Kostya", "Sumy")
+
+        actual = ActorToActorPath.search(graph, "Maxim", "Kostya")
+        self.assertEqual(expected, actual)
+
+    def test_family_search2(self):
+        attrs = {
+            'get_person_main.side_effect': self.get_person_main,
+            'get_movie.side_effect': self.get_movie
+        }
+        ia = MagicMock(**attrs)
+        graph = GraphGenerator(self.actor_ids, ia, max_threads=1).generate()
+
+        expected = ActorToActorPath("Maxim", "Elena")
+        expected.add_connection("Maxim", "Kostya", "Sumy")
+        expected.add_connection("Kostya", "Elena", "Moscow")
+
+        actual = ActorToActorPath.search(graph, "Maxim", "Elena")
+
+        self.assertEqual(expected, actual)
 
 
 if __name__ == '__main__':
