@@ -3,6 +3,7 @@ from graph import ActorsGraph
 from collections import deque, defaultdict
 import itertools
 
+
 class ActorToActorPath(ActorsGraph):
 
     @staticmethod
@@ -11,8 +12,15 @@ class ActorToActorPath(ActorsGraph):
         assert end_id in actors_graph.indices, "{}: actor is not in the graph".format(end_id)
 
         graph_path = ActorToActorPath(start_id, end_id)
+
+        # Breadth First Search will return all visited actors on the path to the target actor;
+        # It also returns depth index on each visited actor, and the max depth reached.
         visited_actors, max_depth = ActorToActorPath.bfs(actors_graph, start_id, end_id)
 
+        # Next, the reverse search is executed. Using depth information it traverses visited
+        # actors backwards, from end_id to start_id. It constructs ActorToActorPath path along
+        # the way. Resulting ActorToActorPath contains all possible shortest paths from
+        # start_id to end_id.
         previously_connected = {end_id}
         for d in reversed(range(max_depth + 1)):
             connected = set()
@@ -31,26 +39,26 @@ class ActorToActorPath(ActorsGraph):
 
     @staticmethod
     def bfs(actors_graph, start_id, end_id):
-        visited_actors = dict()
+        depth = 0
+        visited_actors = {start_id: depth}
         visited_actors_by_depth = defaultdict(set)
-        current_depth = 0
-        queue = deque([(start_id, current_depth)])
+        visited_actors_by_depth[depth] = start_id
+        queue = deque([(start_id, depth)])
 
         while len(queue) > 0:
             actor_id, depth = queue.pop()
-            if actor_id in visited_actors:
-                continue
+            depth = depth + 1
 
-            visited_actors[actor_id] = depth
-            visited_actors_by_depth[depth].add(actor_id)
-
-            if actor_id == end_id:
-                return visited_actors_by_depth, current_depth
-
-            current_depth = current_depth + 1
             for other_actor_id, _ in actors_graph.get_connections(actor_id):
                 if other_actor_id not in visited_actors:
-                    queue.appendleft((other_actor_id, current_depth))
+                    visited_actors[other_actor_id] = depth
+                    visited_actors_by_depth[depth].add(other_actor_id)
+
+                    if other_actor_id == end_id:
+                        return visited_actors_by_depth, depth
+
+                    queue.appendleft((other_actor_id, depth))
+
         return None
 
     def __init__(self, from_id, to_id):
