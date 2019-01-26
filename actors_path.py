@@ -1,19 +1,44 @@
 from log import log
 from graph import ActorsGraph
+from collections import deque
 
 
 class ActorToActorPath(ActorsGraph):
 
     @staticmethod
-    def search(actors_graph, actor_id, another_actor_id):
-        assert actor_id in actors_graph.indices, "{}: actor is not in the graph".format(actor_id)
-        assert another_actor_id in actors_graph.indices, "{}: actor is not in the graph".format(another_actor_id)
+    def search(actors_graph, start_id, end_id):
+        assert start_id in actors_graph.indices, "{}: actor is not in the graph".format(start_id)
+        assert end_id in actors_graph.indices, "{}: actor is not in the graph".format(end_id)
 
-        graph_path = ActorToActorPath(actor_id, another_actor_id)
+        visited_actors = ActorToActorPath.bfs(actors_graph, start_id, end_id)
+        log.debug(visited_actors)
+
+        graph_path = ActorToActorPath(start_id, end_id)
         # TODO: breadth first search goes here.
         # TODO: use graph_path.add_connection to populate graph_path
 
         return graph_path
+
+    @staticmethod
+    def bfs(actors_graph, start_id, end_id):
+        visited_actors = dict()
+        current_depth = 0
+        queue = deque([(start_id, current_depth)])
+
+        while len(queue) > 0:
+            actor_id, depth = queue.pop()
+            if actor_id in visited_actors:
+                continue
+
+            visited_actors[actor_id] = depth
+            if actor_id == end_id:
+                return visited_actors
+
+            current_depth = current_depth + 1
+            for other_actor_id, _ in actors_graph.get_connections(actor_id):
+                if other_actor_id not in visited_actors:
+                    queue.appendleft((other_actor_id, current_depth))
+        return None
 
     def __init__(self, from_id, to_id):
         super().__init__(actor_ids=[from_id, to_id])
