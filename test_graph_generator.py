@@ -47,11 +47,11 @@ class TestGraphDecorator(unittest.TestCase):
         }
 
     def get_person_main(self, actor_id):
-        log.debug("mocking actor: {}".format(actor_id))
+        # log.debug("mocking actor: {}".format(actor_id))
         return self.persons[actor_id]
 
     def get_movie(self, movie_id):
-        log.debug("mocking movie: {}".format(movie_id))
+        # log.debug("mocking movie: {}".format(movie_id))
         return self.movies[movie_id]
 
     def test_family_graph1(self):
@@ -86,13 +86,16 @@ class TestGraphDecorator(unittest.TestCase):
         self.assertEqual({"New York"}, graph.get_edge("Irina", "Elena"))
         self.assertEqual({"New York"}, graph.get_edge("Irina", "Svetlana"))
 
-    def test_family_search1(self):
+    def get_family_graph(self):
         attrs = {
             'get_person_main.side_effect': self.get_person_main,
             'get_movie.side_effect': self.get_movie
         }
         ia = MagicMock(**attrs)
-        graph = GraphGenerator(self.actor_ids, ia, max_threads=1).generate()
+        return GraphGenerator(self.actor_ids, ia, max_threads=1).generate()
+
+    def test_family_search1(self):
+        graph = self.get_family_graph()
 
         expected = ActorToActorPath("Maxim", "Kostya")
         expected.add_connection("Maxim", "Kostya", "Sumy")
@@ -101,18 +104,40 @@ class TestGraphDecorator(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_family_search2(self):
-        attrs = {
-            'get_person_main.side_effect': self.get_person_main,
-            'get_movie.side_effect': self.get_movie
-        }
-        ia = MagicMock(**attrs)
-        graph = GraphGenerator(self.actor_ids, ia, max_threads=1).generate()
+        graph = self.get_family_graph()
 
         expected = ActorToActorPath("Maxim", "Elena")
         expected.add_connection("Maxim", "Kostya", "Sumy")
         expected.add_connection("Kostya", "Elena", "Moscow")
 
         actual = ActorToActorPath.search(graph, "Maxim", "Elena")
+
+        self.assertEqual(expected, actual)
+
+    def test_family_search3(self):
+        graph = self.get_family_graph()
+
+        expected = ActorToActorPath("Maxim", "Irina")
+        expected.add_connection("Maxim", "Kostya", "Sumy")
+        expected.add_connection("Kostya", "Elena", "Moscow")
+        expected.add_connection("Kostya", "Svetlana", "Moscow")
+        expected.add_connection("Elena", "Irina", "New York")
+        expected.add_connection("Svetlana", "Irina", "New York")
+
+        actual = ActorToActorPath.search(graph, "Maxim", "Irina")
+
+        self.assertEqual(expected, actual)
+
+    def test_family_search4(self):
+        graph = self.get_family_graph()
+
+        expected = ActorToActorPath("Lilia", "Irina")
+        expected.add_connection("Lilia", "Elena", {"Moscow", "Budapest"})
+        expected.add_connection("Lilia", "Svetlana", "Moscow")
+        expected.add_connection("Elena", "Irina", "New York")
+        expected.add_connection("Svetlana", "Irina", "New York")
+
+        actual = ActorToActorPath.search(graph, "Lilia", "Irina")
 
         self.assertEqual(expected, actual)
 

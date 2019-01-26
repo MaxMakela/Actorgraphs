@@ -1,7 +1,7 @@
 from log import log
 from graph import ActorsGraph
 from collections import deque, defaultdict
-
+import itertools
 
 class ActorToActorPath(ActorsGraph):
 
@@ -15,12 +15,17 @@ class ActorToActorPath(ActorsGraph):
 
         previously_connected = {end_id}
         for d in reversed(range(max_depth + 1)):
+            connected = set()
+
             for actor_id in visited_actors[d]:
                 if actor_id in previously_connected:
                     for other_actor_id, films in actors_graph.get_connections(actor_id):
                         if other_actor_id in visited_actors[d - 1]:
                             graph_path.add_connection(actor_id, other_actor_id, films)
-                            previously_connected.add(other_actor_id)
+                            connected.add(other_actor_id)
+            if connected:
+                log.debug("connected: {}".format(", ".join(connected)))
+                previously_connected.update(connected)
 
         return graph_path
 
@@ -54,11 +59,16 @@ class ActorToActorPath(ActorsGraph):
         self.to_id = to_id
 
     def __eq__(self, other):
-        if self.__class__ != other.__class__ or self.actor_ids != other.actor_ids:
+        if self.__class__ != other.__class__:
             return False
-        for i, row in enumerate(self.graph):
-            if row != other.graph[i]:
+
+        if set(self.actor_ids) != set(other.actor_ids):
+            return False
+
+        for id1, id2 in list(itertools.combinations(self.actor_ids, 2)):
+            if self.get_edge(id1, id2) != other.get_edge(id1, id2):
                 return False
+
         return True
 
     def __repr__(self):
