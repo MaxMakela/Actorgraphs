@@ -1,6 +1,6 @@
 from log import log
 from graph import ActorsGraph
-from collections import deque
+from collections import deque, defaultdict
 
 
 class ActorToActorPath(ActorsGraph):
@@ -10,18 +10,24 @@ class ActorToActorPath(ActorsGraph):
         assert start_id in actors_graph.indices, "{}: actor is not in the graph".format(start_id)
         assert end_id in actors_graph.indices, "{}: actor is not in the graph".format(end_id)
 
-        visited_actors = ActorToActorPath.bfs(actors_graph, start_id, end_id)
-        log.debug(visited_actors)
-
         graph_path = ActorToActorPath(start_id, end_id)
-        # TODO: breadth first search goes here.
-        # TODO: use graph_path.add_connection to populate graph_path
+        visited_actors, max_depth = ActorToActorPath.bfs(actors_graph, start_id, end_id)
+
+        previously_connected = {end_id}
+        for d in reversed(range(max_depth + 1)):
+            for actor_id in visited_actors[d]:
+                if actor_id in previously_connected:
+                    for other_actor_id, films in actors_graph.get_connections(actor_id):
+                        if other_actor_id in visited_actors[d - 1]:
+                            graph_path.add_connection(actor_id, other_actor_id, films)
+                            previously_connected.add(other_actor_id)
 
         return graph_path
 
     @staticmethod
     def bfs(actors_graph, start_id, end_id):
         visited_actors = dict()
+        visited_actors_by_depth = defaultdict(set)
         current_depth = 0
         queue = deque([(start_id, current_depth)])
 
@@ -31,8 +37,10 @@ class ActorToActorPath(ActorsGraph):
                 continue
 
             visited_actors[actor_id] = depth
+            visited_actors_by_depth[depth].add(actor_id)
+
             if actor_id == end_id:
-                return visited_actors
+                return visited_actors_by_depth, current_depth
 
             current_depth = current_depth + 1
             for other_actor_id, _ in actors_graph.get_connections(actor_id):
@@ -61,7 +69,12 @@ class ActorToActorPath(ActorsGraph):
         assert actor_id in self.indices, "{}: first passed actor is not in the path".format(actor_id)
 
         self.add_actor(other_actor_id)
-        self.add_edge(actor_id, other_actor_id, movie_id)
+
+        if type(movie_id) is set:
+            for mid in movie_id:
+                self.add_edge(actor_id, other_actor_id, mid)
+        else:
+            self.add_edge(actor_id, other_actor_id, movie_id)
 
     def add_actor(self, actor_id):
         """Add actor to the underlying matrix, to indices and to actors list"""
